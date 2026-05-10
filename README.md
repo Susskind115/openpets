@@ -12,6 +12,14 @@
 
 ---
 
+## Star OpenPets
+
+Here is an extra GIF of me starring my own repo to encourage you to do the same. If OpenPets makes your coding setup a little more fun, please give the repo a star.
+
+<p align="center">
+  <img src="assets/star-repo.gif" alt="Starring the OpenPets repository" width="100%" />
+</p>
+
 ## What is OpenPets?
 
 OpenPets is a tray-first desktop companion app for AI coding agents.
