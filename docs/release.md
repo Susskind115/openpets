@@ -279,6 +279,47 @@ Artifacts are written to:
 apps/desktop/dist-electron/
 ```
 
+## NPM package release
+
+OpenPets publishes these public npm packages, in dependency order:
+
+```txt
+@open-pets/client
+@open-pets/agent-events
+@open-pets/mcp
+@open-pets/claude
+@open-pets/opencode
+@open-pets/cli
+```
+
+Do not publish the private workspace root, `@open-pets/desktop`, or `@open-pets/pet-format`.
+
+Dry-run npm publishing first:
+
+```bash
+pnpm release:npm
+```
+
+Publish all missing packages to npm:
+
+```bash
+pnpm release:npm -- --yes
+```
+
+If publishing partially succeeds and a rerun is needed:
+
+```bash
+pnpm release:npm -- --yes --skip-existing
+```
+
+If npm requires two-factor auth:
+
+```bash
+pnpm release:npm -- --yes --otp <code>
+```
+
+Publishing with the npm helper requires `npm whoami` to succeed, a clean working tree, and local `HEAD` to match the upstream branch.
+
 ## Important notes for future agents
 
 - Do not publish from an uncommitted local state.

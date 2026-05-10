@@ -1,0 +1,192 @@
+#!/usr/bin/env node
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
+
+const scriptsDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptsDir, "..");
+const repository = "alvinunreal/openpets";
+
+const publishOrder = [
+  "packages/client",
+  "packages/agent-events",
+  "packages/mcp",
+  "packages/claude",
+  "packages/opencode",
+  "packages/cli",
+];
+
+const allowedArgs = new Set([
+  "--yes",
+  "--dry-run",
+  "--skip-checks",
+  "--skip-existing",
+  "--help",
+]);
+
+const rawArgs = process.argv.slice(2).filter((arg) => arg !== "--");
+const options = parseArgs(rawArgs);
+if (options.help) {
+  printHelp();
+  process.exit(0);
+}
+
+const packages = publishOrder.map((relativePath) => {
+  const packageDir = join(repoRoot, relativePath);
+  const packageJson = readJson(join(packageDir, "package.json"));
+  return { relativePath, packageDir, packageJson, name: packageJson.name, version: packageJson.version };
+});
+
+main();
+
+function main() {
+  preflight();
+  assertPublishablePackages();
+
+  if (!options.skipChecks) {
+    run("pnpm", ["build"], { cwd: repoRoot });
+    run("pnpm", ["check"], { cwd: repoRoot });
+  }
+
+  const existing = findAlreadyPublishedPackages();
+  if (existing.length > 0 && options.yes && !options.skipExisting) {
+    throw new Error(`These package versions are already published. Re-run with --skip-existing to publish only missing packages.\n${existing.map((pkg) => `- ${pkg.name}@${pkg.version}`).join("\n")}`);
+  }
+
+  console.log("\nNPM publish plan:");
+  for (const pkg of packages) {
+    const alreadyPublished = existing.some((candidate) => candidate.name === pkg.name && candidate.version === pkg.version);
+    console.log(`- ${pkg.name}@${pkg.version}${alreadyPublished ? " (already published)" : ""}`);
+  }
+
+  if (!options.yes || options.dryRun) {
+    console.log("\nDry run: package publish commands will be validated without uploading.");
+  }
+
+  for (const pkg of packages) {
+    const alreadyPublished = existing.some((candidate) => candidate.name === pkg.name && candidate.version === pkg.version);
+    if (alreadyPublished && options.skipExisting) {
+      console.log(`\nSkipping already published ${pkg.name}@${pkg.version}`);
+      continue;
+    }
+
+    const args = ["publish", "--access", "public", "--tag", options.tag, "--no-git-checks"];
+    if (!options.yes || options.dryRun) args.push("--dry-run");
+    if (options.otp) args.push("--otp", options.otp);
+    run("pnpm", args, { cwd: pkg.packageDir });
+  }
+
+  if (options.yes && !options.dryRun) {
+    console.log("\nNPM packages published successfully.");
+  } else {
+    console.log("\nDry run complete. Re-run with --yes to publish to npm.");
+  }
+}
+
+function parseArgs(args) {
+  const parsed = { yes: false, dryRun: false, skipChecks: false, skipExisting: false, help: false, tag: "latest", otp: "" };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--tag" || arg === "--otp") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) throw new Error(`Missing value for ${arg}.`);
+      if (arg === "--tag") parsed.tag = value;
+      if (arg === "--otp") parsed.otp = value;
+      index += 1;
+      continue;
+    }
+
+    if (!allowedArgs.has(arg)) throw new Error(`Unknown npm release option: ${arg}`);
+    if (arg === "--yes") parsed.yes = true;
+    if (arg === "--dry-run") parsed.dryRun = true;
+    if (arg === "--skip-checks") parsed.skipChecks = true;
+    if (arg === "--skip-existing") parsed.skipExisting = true;
+    if (arg === "--help") parsed.help = true;
+  }
+  return parsed;
+}
+
+function preflight() {
+  requireCommand("pnpm", ["--version"]);
+  requireCommand("npm", ["--version"]);
+  if (options.yes && !options.dryRun) run("npm", ["whoami"], { cwd: repoRoot });
+
+  const remoteUrl = commandOutput("git", ["remote", "get-url", "origin"], { cwd: repoRoot }).trim();
+  if (!remoteUrl.includes(repository)) throw new Error(`Expected origin remote to point at ${repository}. Current origin: ${remoteUrl}`);
+
+  const status = commandOutput("git", ["status", "--porcelain"], { cwd: repoRoot }).trim();
+  if (status) throw new Error(`Git working tree must be clean before npm release.\n${status}`);
+
+  run("git", ["rev-parse", "--verify", "HEAD"], { cwd: repoRoot });
+  const upstream = commandOutput("git", ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], { cwd: repoRoot }).trim();
+  if (!upstream) throw new Error("Release branch must have an upstream remote branch.");
+  run("git", ["fetch", "origin"], { cwd: repoRoot });
+  const localHead = commandOutput("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).trim();
+  const remoteHead = commandOutput("git", ["rev-parse", upstream], { cwd: repoRoot }).trim();
+  if (localHead !== remoteHead) throw new Error(`HEAD must be pushed to ${upstream} before npm release.`);
+}
+
+function assertPublishablePackages() {
+  const versions = new Set(packages.map((pkg) => pkg.version));
+  if (versions.size !== 1) throw new Error(`Publishable packages must use one shared version. Found: ${[...versions].join(", ")}`);
+
+  for (const pkg of packages) {
+    if (!pkg.name || !pkg.version) throw new Error(`${pkg.relativePath}/package.json must include name and version.`);
+    if (pkg.packageJson.private) throw new Error(`${pkg.name} is private and cannot be published.`);
+    if (pkg.packageJson.publishConfig?.access !== "public") throw new Error(`${pkg.name} must set publishConfig.access to "public".`);
+    if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error(`${pkg.name} version must be stable semver. Current: ${pkg.version}`);
+  }
+}
+
+function findAlreadyPublishedPackages() {
+  return packages.filter((pkg) => commandSucceeds("npm", ["view", `${pkg.name}@${pkg.version}`, "version", "--json"], { cwd: repoRoot }));
+}
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function requireCommand(command, args) {
+  if (!commandSucceeds(command, args, { cwd: repoRoot })) throw new Error(`Required command is unavailable: ${command}`);
+}
+
+function commandSucceeds(command, args, options) {
+  return spawnSync(command, args, { cwd: options.cwd, stdio: "ignore" }).status === 0;
+}
+
+function commandOutput(command, args, options) {
+  const result = spawnSync(command, args, { cwd: options.cwd, encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed:\n${result.stderr || result.stdout}`);
+  return result.stdout;
+}
+
+function run(command, args, options) {
+  console.log(`\n$ ${command} ${args.join(" ")}`);
+  const result = spawnSync(command, args, { cwd: options.cwd, stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed with exit code ${result.status ?? "unknown"}.`);
+}
+
+function printHelp() {
+  console.log(`Usage: pnpm release:npm -- --yes
+
+Publishes the public OpenPets npm packages in dependency order.
+
+Packages:
+  1. @open-pets/client
+  2. @open-pets/agent-events
+  3. @open-pets/mcp
+  4. @open-pets/claude
+  5. @open-pets/opencode
+  6. @open-pets/cli
+
+Options:
+  --yes            publish to npm; without this, runs pnpm publish --dry-run
+  --dry-run        force dry-run behavior even with --yes
+  --skip-checks    skip pnpm build and pnpm check
+  --skip-existing  skip package versions already present on npm
+  --tag <tag>      npm dist-tag to publish under (default: latest)
+  --otp <code>     npm two-factor authentication one-time password
+  --help           show this help
+`);
+}

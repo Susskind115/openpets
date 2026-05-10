@@ -18,6 +18,7 @@
     "package:desktop:dir": "pnpm build && pnpm --filter @open-pets/desktop package:dir",
     "package:desktop": "pnpm build && pnpm --filter @open-pets/desktop package",
     "release:desktop": "node apps/desktop/scripts/release-local.mjs",
+    "release:npm": "node scripts/release-npm.mjs",
     "test": "pnpm build && pnpm -r --if-present test",
     "check": "pnpm -r check",
     "typecheck": "pnpm -r typecheck",
