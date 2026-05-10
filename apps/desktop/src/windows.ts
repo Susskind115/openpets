@@ -515,7 +515,6 @@ function createAgentSetupHtml(definition: TaskWindowDefinition): string {
                 </div>
                 <h2>Claude Code</h2>
                 <p>Connect Claude Code to your OpenPets companion.</p>
-                <p id="integration-claude-summary" class="integration-summary">Checking Claude Code…</p>
                 <div class="integration-actions stacked">
                   <button id="integration-claude-install" class="agent-action primary" disabled data-loading="true">
                     <svg class="pm-button-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12 3a9 9 0 1 0 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -530,7 +529,7 @@ function createAgentSetupHtml(definition: TaskWindowDefinition): string {
 
               <article class="integration-card" data-integration-card="opencode" tabindex="-1">
                 <div class="integration-card-top"><span class="integration-icon"><img src="${escapeHtml(integrationIcons.opencode)}" alt="" draggable="false" /></span><span id="integration-opencode-status" class="agent-status-pill">Checking</span></div>
-                <h2>OpenCode</h2><p>Connect OpenCode globally to your OpenPets companion.</p><p id="integration-opencode-summary" class="integration-summary">Checking OpenCode…</p>
+                <h2>OpenCode</h2><p>Connect OpenCode globally to your OpenPets companion.</p>
                 <div class="integration-actions stacked">
                   <button id="integration-opencode-install" class="agent-action primary" disabled data-loading="true">Checking…</button>
                   <button id="integration-opencode-configure" class="agent-action secondary" disabled data-loading="true">Checking…</button>
@@ -863,14 +862,11 @@ function createTaskWindowStyles(): string {
     body[data-openpets-view="agent-setup"] .integration-card { min-height: 248px; box-sizing: border-box; display: flex; flex-direction: column; gap: 9px; border: 1px solid rgba(126, 161, 210, 0.44); border-radius: 20px; background: rgba(255,255,255,0.76); box-shadow: 0 16px 38px rgba(61, 99, 160, 0.1), inset 0 1px 0 rgba(255,255,255,0.94); padding: 16px; }
     body[data-openpets-view="agent-setup"] .integration-card.featured { border-color: rgba(37, 99, 235, 0.36); background: linear-gradient(180deg, rgba(239, 247, 255, 0.92), rgba(255,255,255,0.78)); }
     body[data-openpets-view="agent-setup"] .integration-card.disabled { opacity: 0.74; }
-    body[data-openpets-view="agent-setup"] .integration-card.needs-attention { border-color: rgba(239, 68, 68, 0.38); background: linear-gradient(180deg, rgba(254, 242, 242, 0.82), rgba(255,255,255,0.78)); }
     body[data-openpets-view="agent-setup"] .integration-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
     body[data-openpets-view="agent-setup"] .integration-icon { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid rgba(126, 161, 210, 0.34); border-radius: 16px; background: rgba(255,255,255,0.76); box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 20px rgba(61, 99, 160, 0.08); }
     body[data-openpets-view="agent-setup"] .integration-icon img { width: 28px; height: 28px; object-fit: contain; }
     body[data-openpets-view="agent-setup"] .integration-card h2 { margin: 0; font-size: 20px; color: #102149; }
     body[data-openpets-view="agent-setup"] .integration-card p { flex: 1 1 auto; margin: 0; color: #526483; line-height: 1.35; font-size: 14px; }
-    body[data-openpets-view="agent-setup"] .integration-card .integration-summary { flex: 0 0 auto; padding: 10px 11px; border-radius: 12px; background: rgba(239, 246, 255, 0.72); border: 1px solid rgba(37, 99, 235, 0.14); color: #36547d; font-size: 13px; }
-    body[data-openpets-view="agent-setup"] .integration-card.needs-attention .integration-summary { background: rgba(254, 242, 242, 0.78); border-color: rgba(239, 68, 68, 0.22); color: #991b1b; }
     body[data-openpets-view="agent-setup"] .integration-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
     body[data-openpets-view="agent-setup"] .integration-actions.stacked { grid-template-columns: 1fr; gap: 8px; }
     body[data-openpets-view="agent-setup"] .integration-actions .agent-action:only-child { grid-column: 1 / -1; }

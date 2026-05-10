@@ -224,14 +224,10 @@ function updateOpenCodeIntegration(snapshot, selected) {
   const opencode = snapshot.opencodeStatus;
   const preview = snapshot.opencodePreview;
   if (!opencode || !preview) return;
-  const card = document.querySelector('[data-integration-card="opencode"]');
-  if (card instanceof HTMLElement) card.classList.toggle("needs-attention", opencode.state === "not_detected" || opencode.state === "error");
-  const summary = document.getElementById("integration-opencode-summary");
-  if (summary) summary.textContent = integrationSummaryFor("OpenCode", opencode.state, opencode.details, snapshot.commandPaths.opencode);
   const cardStatus = document.getElementById("integration-opencode-status");
   if (cardStatus) {
     cardStatus.textContent = opencode.label;
-    cardStatus.className = `agent-status-pill ${statusClassFor(opencode.state)}`;
+    cardStatus.className = `agent-status-pill ${cardStatusClassFor(opencode.state)}`;
   }
   const installCard = document.getElementById("integration-opencode-install");
   if (installCard instanceof HTMLButtonElement) {
@@ -273,14 +269,10 @@ function updateOpenCodeIntegration(snapshot, selected) {
 }
 
 function updateClaudeIntegrationCard(snapshot) {
-  const card = document.querySelector('[data-integration-card="claude"]');
-  if (card instanceof HTMLElement) card.classList.toggle("needs-attention", snapshot.status.state === "not_detected" || snapshot.status.state === "error");
-  const summary = document.getElementById("integration-claude-summary");
-  if (summary) summary.textContent = integrationSummaryFor("Claude Code", snapshot.status.state, snapshot.status.details, snapshot.commandPaths.claude);
   const status = document.getElementById("integration-claude-status");
   if (status) {
     status.textContent = snapshot.status.state === "configured" ? "Installed" : snapshot.status.canConfigure ? "Ready" : snapshot.status.label;
-    status.className = `agent-status-pill ${statusClassFor(snapshot.status.state)}`;
+    status.className = `agent-status-pill ${cardStatusClassFor(snapshot.status.state)}`;
   }
 
   const install = document.getElementById("integration-claude-install");
@@ -310,11 +302,9 @@ function updateClaudeIntegrationCard(snapshot) {
   }
 }
 
-function integrationSummaryFor(label, state, details, overridePath) {
-  if (state === "not_detected") return overridePath ? `${label} was not found at the saved path. Open Configure to update it.` : `${label} was not found. Open Configure to paste the full command path.`;
-  if (state === "error") return details || `${label} needs attention. Open Configure for details.`;
-  if (state === "configured") return `${label} is connected to OpenPets.`;
-  return details || `${label} is ready to configure.`;
+function cardStatusClassFor(state) {
+  if (state === "not_detected" || state === "error") return "error";
+  return statusClassFor(state);
 }
 
 function bindIntegrationHubButtons(snapshot, select) {
