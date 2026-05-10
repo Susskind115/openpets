@@ -30,6 +30,14 @@ OpenPets is a tray-first desktop companion app for AI coding agents.
 - **Pet-pack friendly** - loads installed animated pet packs and can route a selected agent/project to its own pet window.
 - **Privacy-conscious by design** - automatic hook speech is static and local; prompts, code, logs, command output, URLs, paths, and secrets are not shown in bubbles.
 
+## Manage your pets
+
+Browse installed pets, preview their animations, and choose which companion should follow each coding agent from the OpenPets desktop app.
+
+<p align="center">
+  <img src="assets/manage-pets.png" alt="Managing pets in the OpenPets desktop app" width="100%" />
+</p>
+
 ## Quick start
 
 Install the desktop app, then connect your coding agent.
@@ -60,6 +68,10 @@ Use the desktop **Integrations** screen for global setup when available:
 
 - **Claude Code** - installs OpenPets MCP, Claude memory instructions, and optional Claude hooks.
 - **OpenCode** - installs OpenPets MCP, an OpenCode instruction file, and the `@open-pets/opencode` plugin.
+
+<p align="center">
+  <img src="assets/integrations.png" alt="OpenPets desktop integrations screen" width="100%" />
+</p>
 
 For project-local setup, run the CLI from the project you want to configure:
 
@@ -98,6 +110,10 @@ With a selected pet:
 ```bash
 claude mcp add --scope user openpets -- npx -y @open-pets/mcp --pet <petId>
 ```
+
+<p align="center">
+  <img src="assets/claude.png" alt="OpenPets reacting to Claude Code" width="100%" />
+</p>
 
 See [`docs/claude-integration.md`](docs/claude-integration.md) for the full file layout, hook mapping, project-local behavior, and safety rules.
 
