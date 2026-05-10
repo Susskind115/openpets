@@ -300,16 +300,10 @@ Dry-run npm publishing first:
 pnpm release:npm
 ```
 
-Publish all missing packages to npm:
+Publish all missing packages to npm. Package versions that already exist on npm are skipped automatically:
 
 ```bash
 pnpm release:npm -- --yes
-```
-
-If publishing partially succeeds and a rerun is needed:
-
-```bash
-pnpm release:npm -- --yes --skip-existing
 ```
 
 If npm requires two-factor auth:

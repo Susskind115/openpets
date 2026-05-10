@@ -21,7 +21,6 @@ const allowedArgs = new Set([
   "--yes",
   "--dry-run",
   "--skip-checks",
-  "--skip-existing",
   "--help",
 ]);
 
@@ -50,9 +49,6 @@ function main() {
   }
 
   const existing = findAlreadyPublishedPackages();
-  if (existing.length > 0 && options.yes && !options.skipExisting) {
-    throw new Error(`These package versions are already published. Re-run with --skip-existing to publish only missing packages.\n${existing.map((pkg) => `- ${pkg.name}@${pkg.version}`).join("\n")}`);
-  }
 
   console.log("\nNPM publish plan:");
   for (const pkg of packages) {
@@ -66,7 +62,7 @@ function main() {
 
   for (const pkg of packages) {
     const alreadyPublished = existing.some((candidate) => candidate.name === pkg.name && candidate.version === pkg.version);
-    if (alreadyPublished && options.skipExisting) {
+    if (alreadyPublished) {
       console.log(`\nSkipping already published ${pkg.name}@${pkg.version}`);
       continue;
     }
@@ -85,7 +81,7 @@ function main() {
 }
 
 function parseArgs(args) {
-  const parsed = { yes: false, dryRun: false, skipChecks: false, skipExisting: false, help: false, tag: "latest", otp: "" };
+  const parsed = { yes: false, dryRun: false, skipChecks: false, help: false, tag: "latest", otp: "" };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === "--tag" || arg === "--otp") {
@@ -101,7 +97,6 @@ function parseArgs(args) {
     if (arg === "--yes") parsed.yes = true;
     if (arg === "--dry-run") parsed.dryRun = true;
     if (arg === "--skip-checks") parsed.skipChecks = true;
-    if (arg === "--skip-existing") parsed.skipExisting = true;
     if (arg === "--help") parsed.help = true;
   }
   return parsed;
@@ -184,7 +179,6 @@ Options:
   --yes            publish to npm; without this, runs pnpm publish --dry-run
   --dry-run        force dry-run behavior even with --yes
   --skip-checks    skip pnpm build and pnpm check
-  --skip-existing  skip package versions already present on npm
   --tag <tag>      npm dist-tag to publish under (default: latest)
   --otp <code>     npm two-factor authentication one-time password
   --help           show this help
