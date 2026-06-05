@@ -112,6 +112,13 @@ const installMouseInterop = () => {
 
   document.addEventListener("click", dismissBubble);
 
+  document.addEventListener("dblclick", (event) => {
+    const target = getInteractiveTarget(event);
+    if (target && target.closest(".pet-hitbox, .pet-shell")) {
+      ipcRenderer.send("openpets:pet-dblclick");
+    }
+  });
+
   document.addEventListener("mousemove", (event) => {
     updateInteractiveHit(event);
     if (dragging) ipcRenderer.send("openpets:pet-drag-move", { screenX: event.screenX, screenY: event.screenY });

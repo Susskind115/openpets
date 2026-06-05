@@ -165,6 +165,7 @@ export const CLIENT_EVENT_TYPES = [
   "pet.say.displayed",
   "settings.updated",
   "heartbeat",
+  "user.message",
 ] as const;
 
 export type ClientEventType = (typeof CLIENT_EVENT_TYPES)[number];

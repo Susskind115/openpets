@@ -4,6 +4,19 @@ import { validateSpeechMessage, PET_REACTIONS, type PetReaction } from "@cloud-p
 
 const ALLOWED_COMMANDS = new Set(["pet.say", "pet.react", "pet.combo", "pet.notify"]);
 
+type CommandCallback = (message: string, reaction?: string) => void;
+const commandListeners: CommandCallback[] = [];
+
+export function onCloudCommandExecuted(callback: CommandCallback): void {
+  commandListeners.push(callback);
+}
+
+function notifyListeners(message: string, reaction?: string): void {
+  for (const cb of commandListeners) {
+    try { cb(message, reaction); } catch {}
+  }
+}
+
 export function routeCloudCommand(command: any): "ok" | "error" | "ignored" | "expired" {
   if (!command || typeof command !== "object") return "error";
   if (!ALLOWED_COMMANDS.has(command.commandType)) {
@@ -51,6 +64,7 @@ function handleSay(payload: any): "ok" | "error" {
   const reaction = isValidReaction(payload.reaction) ? payload.reaction : undefined;
   const result = applyExternalPetSay(validation.message, reaction);
   info("cloud-router", "pet.say applied", { shown: result.shown, reaction });
+  notifyListeners(validation.message, reaction);
   return "ok";
 }
 
@@ -76,6 +90,7 @@ function handleCombo(payload: any): "ok" | "error" {
     const validation = validateSpeechMessage(payload.message);
     if (validation.ok) {
       applyExternalPetSay(validation.message, reaction);
+      notifyListeners(validation.message, reaction);
     }
   }
 
@@ -92,6 +107,7 @@ function handleNotify(payload: any): "ok" | "error" {
 
   const reaction = isValidReaction(payload.reaction) ? payload.reaction : undefined;
   applyExternalPetSay(validation.message, reaction);
+  notifyListeners(validation.message, reaction);
   info("cloud-router", "pet.notify applied", { reaction });
   return "ok";
 }

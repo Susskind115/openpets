@@ -10,7 +10,10 @@ const TRIGGER_EVENTS = new Set([
   "pet.clicked",
   "cloud.connected",
   "app.started",
+  "user.message",
 ]);
+
+const NO_COOLDOWN_EVENTS = new Set(["cloud.connected", "user.message"]);
 
 const COOLDOWN_MS = 30_000;
 let lastDecisionAt = 0;
@@ -41,7 +44,8 @@ const SYSTEM_PROMPT = `你是一只桌面宠物，名叫{petName}。
 - message 中文，1-50字，可爱温暖
 - 不含代码、URL、路径、密钥
 - 不要太频繁说话，适当回应即可
-- 第一次连接时一定要打个招呼`;
+- 第一次连接时一定要打个招呼
+- 当用户直接对你说话时（user.message），必须回复，不要返回 null`;
 
 export function shouldTriggerBrain(eventType: string): boolean {
   return TRIGGER_EVENTS.has(eventType);
@@ -55,7 +59,7 @@ export async function decidePetAction(
   eventData?: Record<string, unknown>,
 ): Promise<void> {
   const now = Date.now();
-  if (now - lastDecisionAt < COOLDOWN_MS && eventType !== "cloud.connected") {
+  if (!NO_COOLDOWN_EVENTS.has(eventType) && now - lastDecisionAt < COOLDOWN_MS) {
     info("brain", "cooldown active, skipping", { deviceId, eventType });
     return;
   }
@@ -83,7 +87,9 @@ export async function decidePetAction(
     .replace("{behaviorPolicy}", policy || "Use short, warm messages.")
     .replace("{memory}", memory || "No prior memory.");
 
-  const userMessage = `事件：${eventType}${eventData ? "\n数据：" + JSON.stringify(eventData) : ""}`;
+  const userMessage = eventType === "user.message" && eventData?.text
+    ? `用户对你说："${eventData.text}"`
+    : `事件：${eventType}${eventData ? "\n数据：" + JSON.stringify(eventData) : ""}`;
 
   info("brain", "calling LLM", { deviceId, eventType, model: llmConfig.model });
 

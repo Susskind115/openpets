@@ -1,10 +1,11 @@
-import { BrowserWindow, powerMonitor, screen } from "electron";
+import { BrowserWindow, ipcMain, powerMonitor, screen } from "electron";
 
 import { getAppStateSnapshot, getDefaultPetPosition, resetDefaultPetPosition, setDefaultPetPosition, updatePreferences } from "./app-state.js";
 import { defaultPetWindowSize, getDefaultPetInitialPosition } from "./display.js";
 import { debug, info } from "./logger.js";
 import { transientDisplayMs, type OpenPetsReaction } from "./local-ipc-protocol.js";
 import { clearTransientReaction, createDefaultPetWindow, getSafeDefaultPetPosition, getTransientDisplayDurationMs, getTransientReactionAnimationMs, isPetWindowDragging, loadDefaultPetContent, mergePetTransientDisplay, readWindowPosition, recoverPetMouseInterop, setPetReactionState, type PetStatusBadgeReaction, type PetTransientDisplay } from "./pet-window.js";
+import { openChatWindow } from "./chat-window.js";
 
 let defaultPetWindow: BrowserWindow | null = null;
 let paused = false;
@@ -147,6 +148,10 @@ export function installDefaultPetDisplayHandlers(): void {
   screen.on("display-removed", reclampDefaultPetWindow);
   screen.on("display-metrics-changed", reclampDefaultPetWindow);
   powerMonitor.on("resume", recoverDefaultPetWindowAfterResume);
+  ipcMain.on("openpets:pet-dblclick", () => {
+    info("pet.default", "dblclick → open chat");
+    openChatWindow();
+  });
 }
 
 function handleBubbleDismissed(dismissToken: string): void {

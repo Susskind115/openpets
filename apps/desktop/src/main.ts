@@ -15,6 +15,8 @@ import { createAppTray, refreshTrayMenu } from "./tray.js";
 import { checkForGitHubReleaseUpdate } from "./update-checker.js";
 import { installInternalUiHandlers, installInternalUiProtocol } from "./windows.js";
 import { initCloudBrain } from "./cloud-brain/cloud-brain-client.js";
+import { installChatHandlers, sendReplyToChat } from "./chat-window.js";
+import { onCloudCommandExecuted } from "./cloud-brain/cloud-command-router.js";
 
 // OpenPets does not store browser passwords, cookies, or encrypted app secrets.
 // Keep Chromium/Electron from prompting for macOS Keychain or Linux keyring access
@@ -67,6 +69,8 @@ if (!gotSingleInstanceLock) {
     }
     refreshTrayMenu();
     initCloudBrain();
+    installChatHandlers();
+    onCloudCommandExecuted((message, reaction) => sendReplyToChat(message, reaction));
     void (async () => {
       const service = pluginService;
       await service.start();
