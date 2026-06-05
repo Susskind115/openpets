@@ -44,7 +44,7 @@ export async function callLLM(
         max_tokens: config.maxTokens,
         temperature: config.temperature,
       }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!resp.ok) {

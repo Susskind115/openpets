@@ -124,7 +124,10 @@ export async function decidePetAction(
 }
 
 function extractJson(text: string): string | null {
-  const trimmed = text.trim();
+  // Strip <think>...</think> block if present
+  const stripped = text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+  const trimmed = stripped || text.trim();
+
   if (trimmed === "null") return "null";
   if (trimmed.startsWith("{")) return trimmed;
   const match = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
