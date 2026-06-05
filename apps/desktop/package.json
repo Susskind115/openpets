@@ -48,6 +48,7 @@
     "wait-on": "^9.0.10"
   },
   "dependencies": {
+    "@cloud-pet/cloud-protocol": "workspace:*",
     "@open-pets/agent-events": "workspace:*",
     "@open-pets/claude": "workspace:*",
     "@open-pets/cli": "workspace:*",

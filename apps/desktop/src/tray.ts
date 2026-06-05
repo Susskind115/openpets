@@ -2,6 +2,7 @@ import { Menu, Tray, type MenuItemConstructorOptions } from "electron";
 
 import { getAppStateSnapshot } from "./app-state.js";
 import { createTrayIcon } from "./assets.js";
+import { cloudBrainConnect, cloudBrainDisconnect, getCloudStatus } from "./cloud-brain/cloud-brain-client.js";
 import { hideDefaultPet, isDefaultPetVisible, setDefaultPetPaused, showDefaultPet } from "./default-pet-controller.js";
 import { quitOpenPets } from "./lifecycle.js";
 import { info, openLogsFolder } from "./logger.js";
@@ -93,6 +94,8 @@ export function refreshTrayMenu(): void {
       click: () => { void openLogsFolder(); },
     },
     { type: "separator" },
+    ...createCloudBrainMenuItems(),
+    { type: "separator" },
     {
       label: "Quit OpenPets",
       click: () => quitOpenPets(),
@@ -100,6 +103,40 @@ export function refreshTrayMenu(): void {
   ]);
 
   tray.setContextMenu(menu);
+}
+
+function createCloudBrainMenuItems(): MenuItemConstructorOptions[] {
+  const state = getAppStateSnapshot();
+  const config = state.cloudBrain;
+  const cloudStatus = getCloudStatus();
+  const statusLabel = cloudStatus === "connected" ? "Connected"
+    : cloudStatus === "connecting" ? "Connecting..."
+    : cloudStatus === "disabled" ? "Disabled"
+    : cloudStatus === "error" ? "Error"
+    : "Disconnected";
+
+  const items: MenuItemConstructorOptions[] = [
+    {
+      label: `Cloud Brain: ${statusLabel}`,
+      enabled: false,
+    },
+  ];
+
+  if (config.enabled) {
+    if (cloudStatus === "connected" || cloudStatus === "connecting") {
+      items.push({
+        label: "Disconnect",
+        click: () => { cloudBrainDisconnect(); refreshTrayMenu(); },
+      });
+    } else {
+      items.push({
+        label: "Connect",
+        click: () => { void cloudBrainConnect().then(() => refreshTrayMenu()); },
+      });
+    }
+  }
+
+  return items;
 }
 
 function createUpdateMenuItems(): MenuItemConstructorOptions[] {

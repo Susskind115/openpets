@@ -30,6 +30,17 @@ export interface InstalledPetState {
   readonly brokenReason?: string;
 }
 
+export interface CloudBrainState {
+  readonly enabled: boolean;
+  readonly serverUrl: string;
+  readonly deviceId?: string;
+  readonly deviceToken?: string;
+  readonly autoConnect: boolean;
+  readonly lastConnectedAt?: string;
+  readonly lastDisconnectedAt?: string;
+  readonly lastError?: string;
+}
+
 export interface OpenPetsStateV1 {
   readonly version: 1;
   readonly preferences: {
@@ -50,6 +61,7 @@ export interface OpenPetsStateV1 {
     readonly position?: Point;
   };
   readonly analytics: OpenPetsAnalyticsState;
+  readonly cloudBrain: CloudBrainState;
 }
 
 export interface OpenPetsAnalyticsState {
@@ -103,6 +115,16 @@ export function updatePreferences(patch: Partial<OpenPetsStateV1["preferences"]>
     preferences,
   });
 
+  commitState(nextState);
+  return getAppStateSnapshot();
+}
+
+export function updateCloudBrainState(patch: Partial<CloudBrainState>): OpenPetsStateV1 {
+  const state = getInitializedState();
+  const nextState = normalizeState({
+    ...state,
+    cloudBrain: { ...state.cloudBrain, ...patch },
+  });
   commitState(nextState);
   return getAppStateSnapshot();
 }
@@ -319,6 +341,21 @@ function normalizeState(value: unknown): OpenPetsStateV1 {
     },
     defaultPet: position ? { position } : {},
     analytics: normalizeAnalytics(record.analytics),
+    cloudBrain: normalizeCloudBrain(record.cloudBrain),
+  };
+}
+
+function normalizeCloudBrain(value: unknown): CloudBrainState {
+  const record = isRecord(value) ? value : {};
+  return {
+    enabled: typeof record.enabled === "boolean" ? record.enabled : false,
+    serverUrl: typeof record.serverUrl === "string" && record.serverUrl.length > 0 ? record.serverUrl : "http://127.0.0.1:8787",
+    deviceId: typeof record.deviceId === "string" ? record.deviceId : undefined,
+    deviceToken: typeof record.deviceToken === "string" ? record.deviceToken : undefined,
+    autoConnect: typeof record.autoConnect === "boolean" ? record.autoConnect : false,
+    lastConnectedAt: typeof record.lastConnectedAt === "string" ? record.lastConnectedAt : undefined,
+    lastDisconnectedAt: typeof record.lastDisconnectedAt === "string" ? record.lastDisconnectedAt : undefined,
+    lastError: typeof record.lastError === "string" ? record.lastError : undefined,
   };
 }
 
@@ -460,6 +497,11 @@ function createDefaultState(): OpenPetsStateV1 {
       reactionCounts: normalizeReactionCounts(undefined),
       perPetActivityCounts: {},
       lastActivityAt: undefined,
+    },
+    cloudBrain: {
+      enabled: false,
+      serverUrl: "http://127.0.0.1:8787",
+      autoConnect: false,
     },
   };
 }

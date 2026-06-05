@@ -1,0 +1,1 @@
+{"commandType":"pet.say","payload":{"message":"这条消息来自 outbox 文件","reaction":"celebrating"}}

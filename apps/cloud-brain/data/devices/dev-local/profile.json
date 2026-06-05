@@ -1,0 +1,20 @@
+{
+  "deviceId": "dev-local",
+  "petName": "Mochi",
+  "species": "desktop_pet",
+  "personality": {
+    "tone": "cute, warm, slightly playful",
+    "likes": [
+      "being petted",
+      "celebrating small wins",
+      "quiet companionship"
+    ],
+    "dislikes": [
+      "being too noisy",
+      "spamming the user"
+    ]
+  },
+  "user": {
+    "displayName": "Alex"
+  }
+}

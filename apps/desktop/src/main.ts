@@ -14,6 +14,7 @@ import { initializePluginService } from "./plugin-service.js";
 import { createAppTray, refreshTrayMenu } from "./tray.js";
 import { checkForGitHubReleaseUpdate } from "./update-checker.js";
 import { installInternalUiHandlers, installInternalUiProtocol } from "./windows.js";
+import { initCloudBrain } from "./cloud-brain/cloud-brain-client.js";
 
 // OpenPets does not store browser passwords, cookies, or encrypted app secrets.
 // Keep Chromium/Electron from prompting for macOS Keychain or Linux keyring access
@@ -65,6 +66,7 @@ if (!gotSingleInstanceLock) {
       showDefaultPet();
     }
     refreshTrayMenu();
+    initCloudBrain();
     void (async () => {
       const service = pluginService;
       await service.start();
